@@ -29,7 +29,7 @@ def download_gemini_embedding(model,document):
         logging.info("")
         index = VectorStoreIndex.from_documents(document,Settings=Settings)
         
-        
+        index.storage_context.persist()
         logging.info("")
         query_engine = index.as_query_engine()
         return query_engine
