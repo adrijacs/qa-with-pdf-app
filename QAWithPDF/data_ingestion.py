@@ -1,4 +1,4 @@
-from llama_index.core import Document
+from llama_index.core import SimpleDirectoryReader, Document
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -17,28 +17,24 @@ def load_data(uploaded_file):
     """
     try:
         logging.info("Data loading started...")
-        
-        # Read uploaded file
-        file_contents = uploaded_file.read()
-        file_name = uploaded_file.name
-        
-        # Check file type (for PDF or TXT)
-        if file_name.endswith('.txt'):
-            text = file_contents.decode('utf-8')
-        elif file_name.endswith('.pdf'):
-            import PyPDF2
-            reader = PyPDF2.PdfReader(uploaded_file)
-            text = ""
-            for page in reader.pages:
-                text += page.extract_text()
-        else:
-            raise ValueError("Unsupported file type. Please upload a PDF or TXT file.")
-        
-        # Create a Document object manually
-        document = Document(text=text)
-        
+
+        # Save the uploaded file temporarily
+        temp_dir = "temp_uploaded_files"
+        os.makedirs(temp_dir, exist_ok=True)
+        temp_file_path = os.path.join(temp_dir, uploaded_file.name)
+
+        with open(temp_file_path, "wb") as f:
+            f.write(uploaded_file.getbuffer())
+
+        # Now read the uploaded file using SimpleDirectoryReader
+        loader = SimpleDirectoryReader(temp_dir)
+        documents = loader.load_data()
+
+        # Clean up (optional: remove the uploaded file after loading)
+        os.remove(temp_file_path)
+
         logging.info("Data loading completed...")
-        return [document]
+        return documents
     
     except Exception as e:
         logging.info("Exception in loading data...")
